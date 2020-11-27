@@ -2,14 +2,14 @@ import argparse
 import datetime
 
 
-def print_time(line_num, start, end, td):
+def print_time(line_num, start, end, td, notes=''):
     h = td.seconds//3600
     m = (td.seconds//60)%60
     s = td.seconds - (td.seconds//60) * 60  # delta seconds includes also minutes, so they are needed to decrease from seconds
     f = int(td.microseconds * 25 / 1000000)
-    print('{}\t{}\t{}\t{}:{}:{}:{}'.format(line_num, start, end, h, m, s, f))
+    print('{}\t{}\t{}\t{:02d}:{:02d}:{:02d}:{:02d} {}'.format(line_num, start, end, h, m, s, f, notes))
 
-def parse_line(line_num, start, end):
+def parse_line(line_num, start, end, notes):
     [h1, m1, s1, f1] = start.split(':')
     [h2, m2, s2, f2] = end.split(':')
     f1 = int(f1) * 1000 / 25 # frames to milliseconds
@@ -23,7 +23,7 @@ def parse_line(line_num, start, end):
     
     td3 = td2 - td1
 
-    print_time(line_num, start, end, td3)
+    print_time(line_num, start, end, td3, notes)
     return td3
 
 if __name__== "__main__":
@@ -41,10 +41,15 @@ if __name__== "__main__":
             lines = f.readlines()
         
     for line in lines:
-        try:
-            [line_num, start, end] = line.split()
-        except:
-            continue
-        overall_time += parse_line(line_num, start, end)
+        columns = line.split()
+        if len(columns) >= 3:
+            line_number = columns[0]
+            start = columns[1]
+            end = columns[2]
+            #if len(columns) > 3:
+            notes = ''
+            for column in columns[3:]:
+                notes = notes + column + ' '
+            overall_time += parse_line(line_number, start, end, notes)
 
-    print_time("", "", "", overall_time)
+    print_time('', '', '', overall_time)
